@@ -1424,6 +1424,9 @@ static void __init bravo_init(void)
        }
 	compass_platform_data.intr = BRAVO_GPIO_COMPASS_INT;
 
+	platform_add_devices(msm_footswitch_devices,
+  	      msm_num_footswitch_devices);
+
 	i2c_register_board_info(0, i2c_devices, ARRAY_SIZE(i2c_devices));
 
 	ret = bravo_init_mmc(system_rev);

@@ -62,11 +62,15 @@
 #include <mach/htc_headset_gpio.h>
 #include <mach/htc_headset_microp.h>
 #include <mach/socinfo.h>
+#include <linux/msm_kgsl.h>
+#include <linux/regulator/machine.h>
 
 #include "board-bravo.h"
 #include "devices.h"
 #include "proc_comm.h"
 #include "smd_private.h"
+#include "footswitch.h"
+
 
 #define SMEM_SPINLOCK_I2C      6
 
@@ -541,58 +545,54 @@ static struct platform_device qsd_device_spi = {
 	.resource       = qsd_spi_resources,
 };
 
-static struct resource msm_kgsl_resources[] = {
+/* start kgsl */
+static struct resource kgsl_3d0_resources[] = {
 	{
-		.name	= "kgsl_reg_memory",
-		.start	= MSM_GPU_REG_PHYS,
-		.end	= MSM_GPU_REG_PHYS + MSM_GPU_REG_SIZE - 1,
-		.flags	= IORESOURCE_MEM,
+		.name  = KGSL_3D0_REG_MEMORY,
+		.start = 0xA0000000,
+		.end = 0xA001ffff,
+		.flags = IORESOURCE_MEM,
 	},
 	{
-		.name	= "kgsl_phys_memory",
-		.start	= MSM_GPU_MEM_BASE,
-		.end	= MSM_GPU_MEM_BASE + MSM_GPU_MEM_SIZE - 1,
-		.flags	= IORESOURCE_MEM,
-	},
-	{
-		.start	= INT_GRAPHICS,
-		.end	= INT_GRAPHICS,
-		.flags	= IORESOURCE_IRQ,
+		.name = KGSL_3D0_IRQ,
+		.start = INT_GRAPHICS,
+		.end = INT_GRAPHICS,
+		.flags = IORESOURCE_IRQ,
 	},
 };
 
-#define PWR_RAIL_GRP_CLK		8
-static int bravo_kgsl_power_rail_mode(int follow_clk)
-{
-	int mode = follow_clk ? 0 : 1;
-	int rail_id = PWR_RAIL_GRP_CLK;
-
-	return msm_proc_comm(PCOM_CLKCTL_RPC_RAIL_CONTROL, &rail_id, &mode);
-}
-
-static int bravo_kgsl_power(bool on)
-{
-	int cmd;
-	int rail_id = PWR_RAIL_GRP_CLK;
-
-	cmd = on ? PCOM_CLKCTL_RPC_RAIL_ENABLE : PCOM_CLKCTL_RPC_RAIL_DISABLE;
-	return msm_proc_comm(cmd, &rail_id, NULL);
-}
-
-static struct platform_device msm_kgsl_device = {
-	.name		= "kgsl",
-	.id		= -1,
-	.resource	= msm_kgsl_resources,
-	.num_resources	= ARRAY_SIZE(msm_kgsl_resources),
+static struct kgsl_device_platform_data kgsl_3d0_pdata = {
+	.pwrlevel = {
+		{
+			.gpu_freq = 0,
+			.bus_freq = 128000000,
+		},
+	},
+	.init_level = 0,
+	.num_levels = 1,
+	.set_grp_async = NULL,
+	.idle_timeout = HZ/5,
+	.clk_map = KGSL_CLK_GRP | KGSL_CLK_IMEM,
 };
 
-static struct android_pmem_platform_data mdp_pmem_pdata = {
-	.name		= "pmem",
-	.start		= MSM_PMEM_MDP_BASE,
-	.size		= MSM_PMEM_MDP_SIZE,
-	.no_allocator	= 0,
-	.cached		= 1,
+struct platform_device msm_kgsl_3d0 = {
+	.name = "kgsl-3d0",
+	.id = 0,
+	.num_resources = ARRAY_SIZE(kgsl_3d0_resources),
+	.resource = kgsl_3d0_resources,
+	.dev = {
+		.platform_data = &kgsl_3d0_pdata,
+	},
 };
+/* end kgsl */
+
+/* start footswitch regulator */
+struct platform_device *msm_footswitch_devices[] = {
+	FS_PCOM(FS_GFX3D,  "fs_gfx3d"),
+};
+
+unsigned msm_num_footswitch_devices = ARRAY_SIZE(msm_footswitch_devices);
+/* end footswitch regulator */
 
 static struct android_pmem_platform_data android_pmem_adsp_pdata = {
 	.name		= "pmem_adsp",
@@ -1248,7 +1248,7 @@ static struct platform_device *devices[] __initdata = {
 	&msm_camera_sensor_s5k3e2fx,
 #endif
 #endif
-	&msm_kgsl_device,
+	&msm_kgsl_3d0,
 	&msm_device_i2c,
 	&bravo_flashlight_device,
 #if defined(CONFIG_SPI_QSD)

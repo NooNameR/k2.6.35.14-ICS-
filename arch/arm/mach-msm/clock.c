@@ -427,6 +427,12 @@ int clks_print_running(void)
 }
 EXPORT_SYMBOL(clks_print_running);
 
+long clk_round_rate(struct clk *clk, unsigned long rate)
+{
+	return clk->ops->round_rate(clk->id, rate);
+}
+EXPORT_SYMBOL(clk_round_rate);
+
 int clks_allow_tcxo_locked(void)
 {
 	struct clk *clk;

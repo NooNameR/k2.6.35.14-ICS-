@@ -161,10 +161,8 @@ int platform_physical_low_power_pages(unsigned long start_pfn,
 	return 1;
 }
 
-unsigned long allocate_contiguous_ebi_nomap(unsigned long size,
-	unsigned long align)
+unsigned long allocate_contiguous_ebi_nomap(unsigned long size,unsigned long align)
 {
-	return _allocate_contiguous_memory_nomap(size, get_ebi_memtype(),
-		align, __builtin_return_address(0));
+  return _allocate_contiguous_memory_nomap(size, MEMTYPE_EBI0,align, __builtin_return_address(0));
 }
 EXPORT_SYMBOL(allocate_contiguous_ebi_nomap);

@@ -7,6 +7,7 @@ else
 obj-y += timer.o clock.o
 endif
 
+
 ifndef CONFIG_ARCH_MSM8X60
 obj-y += irq.o devices.o pmic.o vreg.o
 endif

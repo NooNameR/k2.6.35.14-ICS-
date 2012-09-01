@@ -1378,20 +1378,6 @@ config MSM_CPU_FREQ_ONDEMAND_MIN
 	int "Min"
 	default 245760
 
-config MSM_HW3D
-	tristate "MSM Hardware 3D Register Driver"
-	depends on EARLYSUSPEND
-	default y
-	help
-	  Provides access to registers needed by the userspace OpenGL|ES
-	  library.
-
-config MSM_HW3D_EARLYSUSPEND_ENABLED
-        tristate "MSM Hardware 3D Driver support earlysuspend"
-        depends on MSM_HW3D
-        default y
-        help
-          Provide selection to support earlysuspend in HW3D or not.
 
 if !ARCH_QSD8X50 && !ARCH_MSM8X60
 config MSM_ADSP

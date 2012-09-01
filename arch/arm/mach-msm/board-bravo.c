@@ -594,11 +594,21 @@ struct platform_device *msm_footswitch_devices[] = {
 unsigned msm_num_footswitch_devices = ARRAY_SIZE(msm_footswitch_devices);
 /* end footswitch regulator */
 
+static struct android_pmem_platform_data mdp_pmem_pdata = {
+	.name		= "pmem",
+	.start		= MSM_PMEM_MDP_BASE,
+	.size		= MSM_PMEM_MDP_SIZE,
+/*	.no_allocator	= 0,*/
+	.allocator_type = PMEM_ALLOCATORTYPE_ALLORNOTHING,
+	.cached		= 1,
+};
+
 static struct android_pmem_platform_data android_pmem_adsp_pdata = {
 	.name		= "pmem_adsp",
 	.start		= MSM_PMEM_ADSP_BASE,
 	.size		= MSM_PMEM_ADSP_SIZE,
-	.no_allocator	= 0,
+/*	.no_allocator	= 0,*/
+	.allocator_type = PMEM_ALLOCATORTYPE_BITMAP,
 	.cached		= 1,
 };
 
@@ -607,7 +617,8 @@ static struct android_pmem_platform_data android_pmem_venc_pdata = {
 	.name		= "pmem_venc",
 	.start		= MSM_PMEM_VENC_BASE,
 	.size		= MSM_PMEM_VENC_SIZE,
-	.no_allocator	= 0,
+/*	.no_allocator	= 0,*/
+	.allocator_type = PMEM_ALLOCATORTYPE_BITMAP,
 	.cached		= 1,
 };
 
@@ -1400,11 +1411,6 @@ static void __init bravo_init(void)
 #ifdef CONFIG_MICROP_COMMON
 	bravo_microp_init();
 #endif
-
-	/* set the gpu power rail to manual mode so clk en/dis will not
-	 * turn off gpu power, and hang it on resume */
-	bravo_kgsl_power_rail_mode(0);
-	bravo_kgsl_power(true);
 
 	platform_add_devices(devices, ARRAY_SIZE(devices));
 	bravo_init_panel();

@@ -17,6 +17,8 @@
 #include <linux/mm_types.h>
 #include <linux/bootmem.h>
 #include <linux/module.h>
+#include <linux/memory_alloc.h>
+#include <mach/msm_memtypes.h>
 #include <asm/pgtable.h>
 #include <asm/io.h>
 #include <asm/mach/map.h>
@@ -158,3 +160,11 @@ int platform_physical_low_power_pages(unsigned long start_pfn,
 {
 	return 1;
 }
+
+unsigned long allocate_contiguous_ebi_nomap(unsigned long size,
+	unsigned long align)
+{
+	return _allocate_contiguous_memory_nomap(size, get_ebi_memtype(),
+		align, __builtin_return_address(0));
+}
+EXPORT_SYMBOL(allocate_contiguous_ebi_nomap);

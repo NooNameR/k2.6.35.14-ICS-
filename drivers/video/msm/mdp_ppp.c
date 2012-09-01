@@ -705,7 +705,7 @@ static int get_img(struct mdp_img *img, struct fb_info *info,
 
 	return ret;
 }
-
+#if 0
 static void put_img(struct file *file)
 {
 	if (file) {
@@ -715,7 +715,15 @@ static void put_img(struct file *file)
 			put_msm_hw3d_file(file);
 	}
 }
+#endif
 
+static void put_img(struct file *p_src_file)
+{
+#ifdef CONFIG_ANDROID_PMEM
+	if (p_src_file)
+		put_pmem_file(p_src_file);
+#endif
+}
 static void dump_req(struct mdp_blit_req *req,
 	unsigned long src_start, unsigned long src_len,
 	unsigned long dst_start, unsigned long dst_len)

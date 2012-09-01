@@ -61,6 +61,7 @@
 #include <mach/htc_headset_mgr.h>
 #include <mach/htc_headset_gpio.h>
 #include <mach/htc_headset_microp.h>
+#include <mach/socinfo.h>
 
 #include "board-bravo.h"
 #include "devices.h"
@@ -1469,6 +1470,8 @@ static void __init bravo_map_io(void)
 {
 	msm_map_common_io();
 	msm_clock_init();
+	if (socinfo_init() < 0)
+ 	     printk(KERN_ERR "%s: socinfo_init() failed!\n",__func__);
 }
 
 extern struct sys_timer msm_timer;

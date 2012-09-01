@@ -1,4 +1,5 @@
 obj-y += io.o dma.o memory.o
+obj-y += socinfo.o footswitch-pcom.o
 
 ifdef CONFIG_ARCH_MSM8X60
 obj-y += timer-8x60.o clock-core.o clock-voter.o

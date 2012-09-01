@@ -1,5 +1,5 @@
 obj-y += io.o dma.o memory.o
-obj-y += socinfo.o footswitch-pcom.o
+obj-y += socinfo.o# footswitch-pcom.o
 
 ifdef CONFIG_ARCH_MSM8X60
 obj-y += timer-8x60.o clock-core.o clock-voter.o
@@ -13,6 +13,7 @@ endif
 obj-y += pwrtest.o
 obj-$(CONFIG_ARCH_QSD8X50) += sirc.o
 obj-y += proc_comm.o
+obj-$(CONFIG_REGULATOR) += footswitch-pcom.o
 obj-$(CONFIG_ARCH_MSM_ARM11) += acpuclock-arm11.o idle.o
 obj-$(CONFIG_ARCH_QSD8X50) += arch-init-scorpion.o acpuclock-scorpion.o
 obj-$(CONFIG_ARCH_MSM7X30) += acpuclock-7x30.o internal_power_rail.o

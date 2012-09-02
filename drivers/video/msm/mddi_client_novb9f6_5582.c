@@ -18,9 +18,9 @@
 #include <linux/interrupt.h>
 #include <linux/gpio.h>
 #include <linux/wakelock.h>
-#include <linux/slab.h>
 #include <mach/msm_fb.h>
-#include <mach/debug_display.h>
+#include <linux/slab.h>
+#include <linux/sched.h>
 
 static DECLARE_WAIT_QUEUE_HEAD(novtec_vsync_wait);
 
@@ -73,7 +73,7 @@ static void novtec_wait_vsync(struct msm_panel_data *panel_data)
 	}
 	if (wait_event_timeout(novtec_vsync_wait, panel->novtec_got_int,
 				HZ/2) == 0)
-		PR_DISP_ERR("timeout waiting for VSYNC\n");
+		printk(KERN_ERR "timeout waiting for VSYNC\n");
 	panel->novtec_got_int = 0;
 	/* interrupt clears when screen dma starts */
 }
@@ -92,7 +92,7 @@ static int novtec_suspend(struct msm_panel_data *panel_data)
 	ret = bridge_data->uninit(bridge_data, client_data);
 	wake_unlock(&panel->idle_lock);
 	if (ret) {
-		PR_DISP_INFO("mddi novtec client: non zero return from "
+		printk(KERN_INFO "mddi novtec client: non zero return from "
 			"uninit\n");
 		return ret;
 	}
@@ -147,6 +147,8 @@ static irqreturn_t novtec_vsync_interrupt(int irq, void *data)
 
 	panel->novtec_got_int = 1;
 	if (panel->novtec_callback) {
+//XXX T2 Fix For Supersonic
+//		mdelay(3);
 		panel->novtec_callback->func(panel->novtec_callback);
 		panel->novtec_callback = 0;
 	}
@@ -181,7 +183,7 @@ static int setup_vsync(struct panel_info *panel,
 			  "vsync", panel);
 	if (ret)
 		goto err_request_irq_failed;
-	PR_DISP_INFO("vsync on gpio %d now %d\n",
+	printk(KERN_INFO "vsync on gpio %d now %d\n",
 	       gpio, gpio_get_value(gpio));
 	return 0;
 
@@ -194,6 +196,46 @@ err_gpio_direction_input_failed:
 err_request_gpio_failed:
 	return ret;
 }
+
+/* maejrep's T2 interface - start */
+/* Allows for changing of the T2 register on the fly */
+static ssize_t nov_t2_show(struct device *dev, struct device_attribute *attr,
+                       char *buf)
+{
+	struct msm_mddi_client_data *client_data = dev->platform_data;
+	int ret;
+	unsigned val;
+
+	val = 0;
+	val |= client_data->remote_read(client_data, 0xb101) << 8;
+	val |= client_data->remote_read(client_data, 0xb102);
+
+	ret = sprintf(buf, "T2: d%u, 0x%04xh\n", val, val);
+
+	return ret;
+}
+
+static ssize_t nov_t2_store(struct device *dev, struct device_attribute *attr,
+                       const char *buf, size_t count)
+{
+	struct msm_mddi_client_data *client_data = dev->platform_data;
+	unsigned val;
+
+	sscanf(buf, "%u", &val);
+
+	if (val <= 245 || val > 999) {
+		printk(KERN_WARNING "%s: invalid value for t2: %u\n", __func__, val);
+		return -EINVAL;
+	}
+
+	client_data->remote_write(client_data, (0xff00 & val) >> 8, 0xb101);
+	client_data->remote_write(client_data, (0x00ff & val), 0xb102);
+
+	return count;
+}
+
+DEVICE_ATTR(t2, 0644, nov_t2_show, nov_t2_store);
+/* maejrep's T2 interface - end */
 
 static int mddi_novtec_probe(struct platform_device *pdev)
 {
@@ -209,10 +251,10 @@ static int mddi_novtec_probe(struct platform_device *pdev)
 		return -ENOMEM;
 	platform_set_drvdata(pdev, panel);
 
-	PR_DISP_DEBUG("%s\n", __func__);
+	printk(KERN_DEBUG "%s\n", __func__);
 
 	if (panel_data->caps & MSMFB_CAP_CABC) {
-		PR_DISP_INFO("CABC enabled\n");
+		printk(KERN_INFO "CABC enabled\n");
 		mddi_nov_cabc.dev.platform_data = client_data;
 		platform_device_register(&mddi_nov_cabc);
 	}

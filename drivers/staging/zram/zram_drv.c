@@ -37,7 +37,7 @@
 
 /* Globals */
 static int zram_major;
-struct zram *devices;
+struct zram *devices_zram;
 
 /* Module params (documentation at end) */
 unsigned int num_devices;
@@ -678,14 +678,14 @@ static int __init zram_init(void)
 
 	/* Allocate the device array and initialize each one */
 	pr_info("Creating %u devices ...\n", num_devices);
-	devices = kzalloc(num_devices * sizeof(struct zram), GFP_KERNEL);
-	if (!devices) {
+	devices_zram = kzalloc(num_devices * sizeof(struct zram), GFP_KERNEL);
+	if (!devices_zram) {
 		ret = -ENOMEM;
 		goto unregister;
 	}
 
 	for (dev_id = 0; dev_id < num_devices; dev_id++) {
-		ret = create_device(&devices[dev_id], dev_id);
+		ret = create_device(&devices_zram[dev_id], dev_id);
 		if (ret)
 			goto free_devices;
 	}
@@ -694,8 +694,8 @@ static int __init zram_init(void)
 
 free_devices:
 	while (dev_id)
-		destroy_device(&devices[--dev_id]);
-	kfree(devices);
+		destroy_device(&devices_zram[--dev_id]);
+	kfree(devices_zram);
 unregister:
 	unregister_blkdev(zram_major, "zram");
 out:
@@ -708,7 +708,7 @@ static void __exit zram_exit(void)
 	struct zram *zram;
 
 	for (i = 0; i < num_devices; i++) {
-		zram = &devices[i];
+		zram = &devices_zram[i];
 
 		destroy_device(zram);
 		if (zram->init_done)
@@ -717,7 +717,7 @@ static void __exit zram_exit(void)
 
 	unregister_blkdev(zram_major, "zram");
 
-	kfree(devices);
+	kfree(devices_zram);
 	pr_debug("Cleanup done!\n");
 }
 

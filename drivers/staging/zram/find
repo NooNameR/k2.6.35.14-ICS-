@@ -1,0 +1,6 @@
+text="devices"
+for i in `ls`
+do
+	echo $i
+	cat $i | grep $text
+done
